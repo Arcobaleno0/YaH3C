@@ -25,12 +25,14 @@ def display_prompt(msg_type, msg):
     prompt += '\x1b[1m' + msg + '\x1b(B\x1b[m'
     print prompt
 
+
 def display_packet(packet):
     # print ethernet_header information
     print 'Ethernet Header Info: '
     print '\tFrom: ' + repr(packet[0:6])
     print '\tTo: ' + repr(packet[6:12])
     print '\tType: ' + repr(packet[12:14])
+
 
 class EAPAuth:
     def __init__(self, login_info):
@@ -100,8 +102,8 @@ class EAPAuth:
     def display_login_message(self, msg):
         """
             display the messages received form the radius server,
-            including the error meaasge after logging failed or
-            other meaasge from networking centre
+            including the error message after logging failed or
+            other message from networking centre
         """
         try:
             print msg.decode('gbk')
@@ -112,6 +114,7 @@ class EAPAuth:
         vers, type, eapol_len  = unpack("!BBH",eap_packet[:4])
         if type != EAPOL_EAPPACKET:
             display_prompt('in', 'Got unknown EAPOL type %i' % type)
+            return
 
         # EAPOL_EAPPACKET type
         code, id, eap_len = unpack("!BBH", eap_packet[4:8])

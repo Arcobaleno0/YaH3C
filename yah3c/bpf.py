@@ -11,20 +11,20 @@ __all__ = ["BPF"]
 ##################################################################
 # CONSTANTS / GLOBALS
 # BPF SPECIFIC CONSTANTS
-BPF_LD  = 0x00
-BPF_H   = 0x08
+BPF_LD = 0x00
+BPF_H = 0x08
 BPF_ABS = 0x20
 BPF_JMP = 0x05
 BPF_JEQ = 0x10
-BPF_K   = 0x00
+BPF_K = 0x00
 BPF_RET = 0x06
 ETHERTYPE_ETHERCAT = 0x8888
 
-OSX_BPF_DEVICES="sysctl debug.bpf_maxdevices" #check
-OSX_NETWORKSETUP_LIST="networksetup -listallhardwareports"
-OSX_NETWORKSETUP_GET_MAC="networksetup -getmacaddress"
-OSX_INTERFACE_DEV_QUERY_STR="Device:"
-OSX_INTERFACE_ADDRESS_QUERY_STR="Ethernet Address:"
+OSX_BPF_DEVICES = "sysctl debug.bpf_maxdevices"
+OSX_NETWORKSETUP_LIST = "networksetup -listallhardwareports"
+OSX_NETWORKSETUP_GET_MAC = "networksetup -getmacaddress"
+OSX_INTERFACE_DEV_QUERY_STR = "Device:"
+OSX_INTERFACE_ADDRESS_QUERY_STR = "Ethernet Address:"
 
 """
 Linux ioctl numbers made easy
@@ -115,8 +115,8 @@ def eth_aton(mac):
 def conv_octet(octet):
     res = ""
     factor = 16
-    for i in range (0, 2):  # max ff = 15*16+15
-        div = int (octet / factor)
+    for i in range(0, 2):  # max ff = 15*16+15
+        div = int(octet / factor)
         res += "%x" % div
         octet -= div * 16
         factor /= 16
@@ -356,9 +356,9 @@ class BPF(object):
         # BIOCSORTIMEOUT - set the read timeout
         # _IOW ('B', 109, struct timeval50)
 
-        # ioc = 0x80000000 | (8 << 16) | (ord('B') << 8) | 109
-        # buf = struct.pack('II', DEFAULT_TIMEOUT, 0)
-        # fcntl.ioctl(self.socket.fileno (), ioc, buf)
+        ioc = 0x80000000 | (8 << 16) | (ord('B') << 8) | 109
+        buf = struct.pack('II', 5, 0)
+        fcntl.ioctl(self.socket.fileno (), ioc, buf)
 
         # BIOCSETF - set a filter/program
         # _IOW ('B', 103, struct bpf_program)

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 from distutils.core import setup
+from setuptools import find_packages
 import yah3c.yah3c
+
 
 setup(name='yah3c',
       version=yah3c.yah3c.__version__,
