@@ -1,6 +1,6 @@
 """ EAP authentication handler
 
-This module sents EAPOL begin/logoff packet
+This module sends EAPOL begin/logoff packet
 and parses received EAP packet 
 
 """
@@ -8,12 +8,14 @@ and parses received EAP packet
 __all__ = ["EAPAuth"]
 
 import socket
-import os, sys, pwd
+import os, sys
 from subprocess import call
 
+from bpf import BPF
 from colorama import Fore, Style, init
 # init() # required in Windows
 from eappacket import *
+
 
 def display_prompt(color, string):
     prompt = color + Style.BRIGHT + '==> ' + Style.RESET_ALL
@@ -21,7 +23,7 @@ def display_prompt(color, string):
     print prompt
 
 def display_packet(packet):
-    # print ethernet_header infomation
+    # print ethernet_header information
     print 'Ethernet Header Info: '
     print '\tFrom: ' + repr(packet[0:6])
     print '\tTo: ' + repr(packet[6:12])
@@ -29,11 +31,17 @@ def display_packet(packet):
 
 class EAPAuth:
     def __init__(self, login_info):
-        # bind the h3c client to the EAP protocal 
-        self.client = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(ETHERTYPE_PAE))
-        self.client.bind((login_info['ethernet_interface'], ETHERTYPE_PAE))
-        # get local ethernet card address
-        self.mac_addr = self.client.getsockname()[4]
+        # bind the h3c client to the EAP protocol
+        try:
+            self.client = socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(ETHERTYPE_PAE))
+            self.client.bind((login_info['ethernet_interface'], ETHERTYPE_PAE))
+            # get local ethernet card address
+            self.mac_addr = self.client.getsockname()[4]
+        except AttributeError:
+            self.client = BPF()
+            self.client.bind(login_info['ethernet_interface'])
+            self.mac_addr = self.client.get_mac_address(login_info['ethernet_interface'])
+
         self.ethernet_header = get_ethernet_header(self.mac_addr, PAE_GROUP_ADDR, ETHERTYPE_PAE)
         self.has_sent_logoff = False
         self.login_info = login_info
@@ -117,13 +125,11 @@ class EAPAuth:
         elif code == EAP_FAILURE:
             if (self.has_sent_logoff):
                 display_prompt(Fore.YELLOW, 'Logoff Successfully!')
-
                 #self.display_login_message(eap_packet[10:])
             else:
                 display_prompt(Fore.YELLOW, 'Got EAP Failure')
-
                 #self.display_login_message(eap_packet[10:])
-            exit(-1)
+            # exit(-1)
         elif code == EAP_RESPONSE:
             display_prompt(Fore.YELLOW, 'Got Unknown EAP Response')
         elif code == EAP_REQUEST:
@@ -155,7 +161,6 @@ class EAPAuth:
             self.send_start()
             while True:
                 eap_packet = self.client.recv(1600)
-
                 # strip the ethernet_header and handle
                 self.EAP_handler(eap_packet[14:])
         except KeyboardInterrupt:
@@ -165,7 +170,7 @@ class EAPAuth:
             print "Connection error: %s" %msg
             exit(-1)
 
-def daemonize (stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
+def daemonize(stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
 
     '''This forks the current process into a daemon. The stdin, stdout, and
     stderr arguments are file names that will be opened and be used to replace
