@@ -274,7 +274,7 @@ class BPF(object):
                 self.mac_address += chr(address_part)
         return self.mac_address
 
-    def getBPFProgram(self):
+    def __getBPFProgram__(self):
         num_insn = 4
 
         # insn 1
@@ -362,10 +362,7 @@ class BPF(object):
 
         # BIOCSETF - set a filter/program
         # _IOW ('B', 103, struct bpf_program)
-
-        # TODO: verify if we need to fix this, i.e. have even more resticted/better filtering etc
-        # program = getBPFProgram()
-
+        # program = self.__getBPFProgram__()
         # ioc = 0x80000000 | (8 << 16) | (ord('B') << 8) | 103
         # fcntl.ioctl(self.socket.fileno(), ioc, program)
 
