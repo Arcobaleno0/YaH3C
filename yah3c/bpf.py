@@ -132,17 +132,10 @@ def eth_rev_aton(hexstr, lang=6):
     return res
 
 
-def mac_repr(mac):
-    return ':'.join(['%02x'] * 6) % tuple(map(ord, mac))
-
-
-def md5_repr(md5hash):
-    return ':'.join('%02x' % ord(x) for x in md5hash)
-
-
 class BPF(object):
 
-    def __init__(self):
+    def __init__(self, protocol=None):
+        self.protocol = None
         self.socket = None
         # get maximum number of BPF devices
         bpf_num_str = os.popen(OSX_BPF_DEVICES).read()
@@ -176,6 +169,13 @@ class BPF(object):
         if self.socket is None:
             print "[-] ERROR: could not open any /dev/bpfx devices. Exiting..."
             exit (1)
+        if protocol is not None:
+            if isinstance(protocol, list):
+                self.protocol = []
+                self.protocol.extend(protocol)
+            else:
+                self.protocol = []
+                self.protocol.append(protocol)
 
     def bind(self, interface):
         self.buffer_size = self.__init_and_bind_bpf_socket__(interface)
@@ -197,8 +197,11 @@ class BPF(object):
             msg = buf[18:]
             dst = buf[18:24]
             # src = buf[24:30]
+
             if dst == self.mac_address:
-                return msg
+                pro = struct.unpack('!H', buf[30:32])[0]
+                if self.protocol and pro in self.protocol:
+                    return msg
 
     def __osx_is_interface_valid__(self, interface):
         hardware_list = ""
@@ -317,7 +320,7 @@ class BPF(object):
         # BIOCSBLEN - set required buffer length for reads
         # _IOWR(B,102, u_int)
         ioc = _IOWR(ord('B'), 102, 'I')
-        set_buf_size = struct.pack('I', 1600)
+        set_buf_size = struct.pack('I', 128)
         (_,) = struct.unpack("I", fcntl.ioctl(self.socket.fileno(), ioc, set_buf_size))
 
         # BIOCSETIF - sets the hardware interface associated with the bpf file
@@ -351,19 +354,23 @@ class BPF(object):
 
         ioc = 0x40000000 | (4 << 16) | (ord('B') << 8) | 102
         buf = struct.pack('i', 0)
-        (buf_size,) = struct.unpack("I", fcntl.ioctl(self.socket.fileno(), ioc, buf))
+        (buf_size,) = struct.unpack("I",
+                                    fcntl.ioctl(self.socket.fileno(), ioc, buf))
 
         # BIOCSORTIMEOUT - set the read timeout
         # _IOW ('B', 109, struct timeval50)
 
         ioc = 0x80000000 | (8 << 16) | (ord('B') << 8) | 109
         buf = struct.pack('II', 5, 0)
-        fcntl.ioctl(self.socket.fileno (), ioc, buf)
+        fcntl.ioctl(self.socket.fileno(), ioc, buf)
 
         # BIOCSETF - set a filter/program
         # _IOW ('B', 103, struct bpf_program)
         # program = self.__getBPFProgram__()
         # ioc = 0x80000000 | (8 << 16) | (ord('B') << 8) | 103
         # fcntl.ioctl(self.socket.fileno(), ioc, program)
+
+        # BIOCFLUSH
+        # _IO(ord('B'), 104)
 
         return buf_size

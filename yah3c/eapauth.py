@@ -43,7 +43,7 @@ class EAPAuth:
             # get local ethernet card address
             self.mac_addr = self.client.getsockname()[4]
         except AttributeError:
-            self.client = BPF()
+            self.client = BPF(ETHERTYPE_PAE)
             self.client.bind(login_info['ethernet_interface'])
             self.mac_addr = self.client.get_mac_address(login_info['ethernet_interface'])
 
@@ -158,7 +158,7 @@ class EAPAuth:
                 display_prompt('out', 'Sending EAP response with password')
             else:
                 display_prompt('in', 'Got unknown Request type (%i)' % reqtype)
-        elif code==10 and id==5:
+        elif code == 10 and id == 5:
             self.display_login_message(eap_packet[12:])
         else:
             display_prompt('in', 'Got unknown EAP code (%i)' % code)
@@ -168,6 +168,8 @@ class EAPAuth:
             self.send_start()
             while True:
                 eap_packet = self.client.recv(1600)
+                if eap_packet is None:
+                    continue
                 # strip the ethernet_header and handle
                 self.EAP_handler(eap_packet[14:])
         except KeyboardInterrupt:
