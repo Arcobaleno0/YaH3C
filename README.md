@@ -1,7 +1,7 @@
 YaH3C
 =====
 
-YaH3C 是用于校园网认证的客户端，支持中山大学东校区.
+YaH3C 是用于校园网认证的客户端，支持中山大学东校区，支持 Mac OSX。
 
 为什么不用iNode
 ---------------
@@ -36,7 +36,7 @@ sudo pacman -S git
 然后，从项目中clone下来并安装
 
 ```bash
-git clone git://github.com/humiaozuzu/YaH3C.git
+git clone git://github.com/lpy/YaH3C.git
 cd YaH3C
 sudo python setup.py install
 ```
@@ -93,6 +93,16 @@ dhcp_command = dhcpcd      # 验证成功后使用的dhcp命令(dhcpcd/dhclient)
 daemon = True              # 验证成功后是否变成daemon进程，默认为是
 ```
 
+Mac 下的登陆信息如下所示：
+
+``` ini
+[account]                  # 你的帐户
+password = 123456          # 密码
+ethernet_interface = en0   # 使用的网卡
+dhcp_command =             # Mac 下不需要， 默认为空
+daemon = True              # 验证成功后是否变成daemon进程，默认为是
+```
+
 ScreenShots
 -----------
 
@@ -112,8 +122,9 @@ Todo
 
 Thanks
 ------
+* [humiaozuzu](https://github.com/humiaozuzu) - Referred to humiaozuzu's [YaH3C](https://github.com/humiaozuzu/YaH3C)
 * [qiao](https://github.com/qiao) - Write python installation script for YaH3C
-* [houqp](https://github.com/houqp) - Refered to houqp's [pyh3c](https://github.com/houqp/pyh3c)
+* [houqp](https://github.com/houqp) - Referred to houqp's [pyh3c](https://github.com/houqp/pyh3c)
 * [tigersoldier](https://github.com/tigersoldier) - Write EAP-Md5 for YaH3C
 
 License
